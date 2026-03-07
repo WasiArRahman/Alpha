@@ -1,0 +1,5 @@
+{
+  "name": "Alpha AI Assistant",
+  "description": "A futuristic, multimodal AI assistant with file system control, memory, and media generation capabilities.",
+  "requestFramePermissions": ["camera", "microphone", "geolocation"]
+}
