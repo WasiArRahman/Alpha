@@ -1,0 +1,167 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId} (matches request.auth.uid)
+    // Fields:
+    //   - uid: string (required) - The user's UID.
+    //   - email: string (required, email format) - The user's email.
+    //   - displayName: string (optional) - The user's display name.
+    //   - photoURL: string (optional) - The user's photo URL.
+    //   - role: string (required, enum: ['user', 'admin']) - The user's role.
+    //
+    // Collection: chats
+    // Document ID: {chatId}
+    // Fields:
+    //   - userId: string (required) - The UID of the user who owns this chat.
+    //   - title: string (required, max 100 chars) - The title of the chat.
+    //   - createdAt: timestamp (required) - When the chat was created.
+    //   - updatedAt: timestamp (required) - When the chat was last updated.
+    //
+    // Collection: chats/{chatId}/messages
+    // Document ID: {messageId}
+    // Fields:
+    //   - chatId: string (required) - The ID of the chat this message belongs to.
+    //   - userId: string (required) - The UID of the user who owns this message.
+    //   - role: string (required, enum: ['user', 'model']) - The role of the message sender.
+    //   - content: string (required, max 10000 chars) - The text content of the message.
+    //   - attachments: list (optional) - Any file attachments.
+    //   - createdAt: timestamp (required) - When the message was sent.
+    //
+    // Collection: memories
+    // Document ID: {memoryId}
+    // Fields:
+    //   - userId: string (required) - The UID of the user.
+    //   - fact: string (required, max 500 chars) - The extracted fact about the user.
+    //   - category: string (optional) - The category of the fact.
+    //   - createdAt: timestamp (required) - When the memory was stored.
+    //
+    // Collection: tasks
+    // Document ID: {taskId}
+    // Fields:
+    //   - userId: string (required) - The UID of the user.
+    //   - title: string (required, max 200 chars) - The title of the task.
+    //   - status: string (required, enum: ['pending', 'completed']) - The status of the task.
+    //   - createdAt: timestamp (required) - When the task was created.
+    //   - completedAt: timestamp (optional) - When the task was completed.
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "abdlmzd49@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidTimestamp(ts) {
+      return ts is timestamp;
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    function isValidUser(data) {
+      return hasOnlyAllowedFields(['uid', 'email', 'displayName', 'photoURL', 'role']) &&
+             data.uid == request.auth.uid &&
+             isValidEmail(data.email) &&
+             (data.role == 'user' || data.role == 'admin');
+    }
+
+    function isValidChat(data) {
+      return hasOnlyAllowedFields(['userId', 'title', 'createdAt', 'updatedAt']) &&
+             data.userId == request.auth.uid &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 100 &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidMessage(data) {
+      return hasOnlyAllowedFields(['chatId', 'userId', 'role', 'content', 'attachments', 'createdAt']) &&
+             data.userId == request.auth.uid &&
+             data.role in ['user', 'model'] &&
+             data.content is string && data.content.size() <= 10000 &&
+             isValidTimestamp(data.createdAt);
+    }
+
+    function isValidMemory(data) {
+      return hasOnlyAllowedFields(['userId', 'fact', 'category', 'createdAt']) &&
+             data.userId == request.auth.uid &&
+             data.fact is string && data.fact.size() > 0 && data.fact.size() <= 500 &&
+             isValidTimestamp(data.createdAt);
+    }
+
+    function isValidTask(data) {
+      return hasOnlyAllowedFields(['userId', 'title', 'status', 'createdAt', 'completedAt']) &&
+             data.userId == request.auth.uid &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.status in ['pending', 'completed'] &&
+             isValidTimestamp(data.createdAt) &&
+             (!('completedAt' in data) || isValidTimestamp(data.completedAt));
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == 'user' || isAdmin());
+      allow update: if isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == resource.data.role || isAdmin());
+    }
+
+    match /chats/{chatId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isAuthenticated() && isValidChat(request.resource.data);
+      allow update: if isOwner(resource.data.userId) && isValidChat(request.resource.data);
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+
+      match /messages/{messageId} {
+        allow read: if isOwner(resource.data.userId) || isAdmin();
+        allow create: if isOwner(request.resource.data.userId) && isValidMessage(request.resource.data);
+        allow update: if false; // Messages are immutable
+        allow delete: if isOwner(resource.data.userId) || isAdmin();
+      }
+    }
+
+    match /memories/{memoryId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isAuthenticated() && isValidMemory(request.resource.data);
+      allow update: if isOwner(resource.data.userId) && isValidMemory(request.resource.data);
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    match /tasks/{taskId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isAuthenticated() && isValidTask(request.resource.data);
+      allow update: if isOwner(resource.data.userId) && isValidTask(request.resource.data);
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    // Default deny
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

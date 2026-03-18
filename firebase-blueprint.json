@@ -1,0 +1,74 @@
+{
+  "entities": {
+    "chat": {
+      "title": "Chat",
+      "description": "A conversation session between a user and Alpha.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "The UID of the user who owns this chat." },
+        "title": { "type": "string", "description": "The title of the chat session." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the chat was created." },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "When the chat was last updated." }
+      },
+      "required": ["userId", "title", "createdAt", "updatedAt"]
+    },
+    "message": {
+      "title": "Message",
+      "description": "A single message in a chat session.",
+      "type": "object",
+      "properties": {
+        "chatId": { "type": "string", "description": "The ID of the chat this message belongs to." },
+        "role": { "type": "string", "enum": ["user", "model"], "description": "The role of the message sender." },
+        "content": { "type": "string", "description": "The text content of the message." },
+        "attachments": { "type": "array", "items": { "type": "object" }, "description": "Any file attachments." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the message was sent." }
+      },
+      "required": ["chatId", "role", "content", "createdAt"]
+    },
+    "memory": {
+      "title": "Memory",
+      "description": "A long-term memory fact about the user.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "The UID of the user." },
+        "fact": { "type": "string", "description": "The extracted fact about the user." },
+        "category": { "type": "string", "description": "The category of the fact (e.g., preference, personal, work)." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the memory was stored." }
+      },
+      "required": ["userId", "fact", "createdAt"]
+    },
+    "user": {
+      "title": "User",
+      "description": "User profile information.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The UID of the user." },
+        "email": { "type": "string", "format": "email", "description": "The user's email." },
+        "displayName": { "type": "string", "description": "The user's display name." },
+        "photoURL": { "type": "string", "description": "The user's photo URL." },
+        "role": { "type": "string", "enum": ["user", "admin"], "description": "The user's role." }
+      },
+      "required": ["uid", "email"]
+    },
+    "task": {
+      "title": "Task",
+      "description": "A task created by the user.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "The UID of the user." },
+        "title": { "type": "string", "description": "The title of the task." },
+        "status": { "type": "string", "enum": ["pending", "completed"], "description": "The status of the task." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the task was created." },
+        "completedAt": { "type": "string", "format": "date-time", "description": "When the task was completed." }
+      },
+      "required": ["userId", "title", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/chats/{chatId}": { "schema": "chat", "description": "User chat sessions." },
+    "/chats/{chatId}/messages/{messageId}": { "schema": "message", "description": "Messages within a chat." },
+    "/memories/{memoryId}": { "schema": "memory", "description": "Long-term user memories." },
+    "/users/{userId}": { "schema": "user", "description": "User profiles." },
+    "/tasks/{taskId}": { "schema": "task", "description": "User tasks." }
+  }
+}

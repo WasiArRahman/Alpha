@@ -1,0 +1,5 @@
+{
+  "name": "Alpha",
+  "description": "A futuristic, multimodal advanced AI assistant with long-term memory and cross-platform capabilities.",
+  "requestFramePermissions": ["camera", "microphone", "geolocation"]
+}
