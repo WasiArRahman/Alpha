@@ -2,25 +2,29 @@ import { useState, useEffect, useRef } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, doc, setDoc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { auth, db, signInWithGoogle, logout, handleFirestoreError } from './lib/firebase';
-import { Chat, Message, UserProfile, OperationType } from './types';
+import { Chat, Message, UserProfile, OperationType, Memory } from './types';
 import Sidebar from './components/Sidebar';
 import ChatWindow from './components/ChatWindow';
 import InputHub from './components/InputHub';
 import MemoryBank from './components/MemoryBank';
 import TaskBoard from './components/TaskBoard';
+import ImageGenerator from './components/ImageGenerator';
 import { generateResponse, extractMemories } from './lib/gemini';
 import { motion, AnimatePresence } from 'motion/react';
-import { LogIn, Sparkles, Brain, Settings, MessageSquare, FileText, X, ClipboardList } from 'lucide-react';
+import { LogIn, Sparkles, Brain, Settings, MessageSquare, FileText, X, ClipboardList, Image as ImageIcon } from 'lucide-react';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [chats, setChats] = useState<Chat[]>([]);
+  const [memories, setMemories] = useState<Memory[]>([]);
   const [activeChat, setActiveChat] = useState<Chat | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMemoryOpen, setIsMemoryOpen] = useState(false);
+  const [memorySearchTerm, setMemorySearchTerm] = useState('');
   const [isTaskOpen, setIsTaskOpen] = useState(false);
+  const [isImageGenOpen, setIsImageGenOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isAuthReady, setIsAuthReady] = useState(false);
@@ -59,6 +63,16 @@ export default function App() {
       const chatList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Chat));
       setChats(chatList);
     }, (error) => handleFirestoreError(error, OperationType.LIST, 'chats'));
+    return () => unsubscribe();
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const q = query(collection(db, 'memories'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const memoryList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Memory));
+      setMemories(memoryList);
+    }, (error) => handleFirestoreError(error, OperationType.LIST, 'memories'));
     return () => unsubscribe();
   }, [user]);
 
@@ -311,7 +325,7 @@ export default function App() {
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-          className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full"
+          className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full"
         />
       </div>
     );
@@ -325,7 +339,7 @@ export default function App() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center space-y-8"
         >
-          <h1 className="text-8xl font-black tracking-tighter bg-gradient-to-r from-emerald-400 to-cyan-500 bg-clip-text text-transparent animate-pulse">
+          <h1 className="text-8xl font-black tracking-tighter bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent animate-pulse">
             ALPHA
           </h1>
           <p className="text-zinc-400 max-w-md mx-auto text-lg">
@@ -335,7 +349,7 @@ export default function App() {
           <button
             onClick={handleSignIn}
             disabled={isAuthenticating}
-            className="flex items-center gap-3 px-8 py-4 bg-white text-black rounded-full font-bold hover:bg-emerald-400 transition-all transform hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(16,185,129,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-3 px-8 py-4 bg-white text-black rounded-full font-bold hover:bg-blue-400 transition-all transform hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(59,130,246,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <LogIn size={20} />
             {isAuthenticating ? 'Initializing...' : 'Initialize Alpha'}
@@ -346,7 +360,7 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen bg-[#050505] text-white overflow-hidden font-sans selection:bg-emerald-500/30 relative">
+    <div className="flex h-screen bg-[#050505] text-white overflow-hidden font-sans selection:bg-blue-500/30 relative">
       <AnimatePresence>
         {isSidebarOpen && (
           <motion.div
@@ -363,6 +377,7 @@ export default function App() {
         isOpen={isSidebarOpen}
         setIsOpen={setIsSidebarOpen}
         chats={chats}
+        memories={memories}
         activeChat={activeChat}
         setActiveChat={(chat) => {
           setActiveChat(chat);
@@ -374,7 +389,8 @@ export default function App() {
           createNewChat();
           if (window.innerWidth < 640) setIsSidebarOpen(false);
         }}
-        onMemoryClick={() => {
+        onMemoryClick={(term) => {
+          setMemorySearchTerm(term || '');
           setIsMemoryOpen(true);
           if (window.innerWidth < 640) setIsSidebarOpen(false);
         }}
@@ -390,38 +406,48 @@ export default function App() {
       />
 
       <main className="flex-1 flex flex-col relative">
-        <header className="h-16 flex items-center justify-between px-6 border-b border-white/5 backdrop-blur-md bg-black/20 z-10">
-          <div className="flex items-center gap-4">
+        <header className="h-14 sm:h-16 flex items-center justify-between px-4 sm:px-6 border-b border-white/5 backdrop-blur-md bg-black/20 z-10">
+          <div className="flex items-center gap-2 sm:gap-4">
             {!isSidebarOpen && (
               <button onClick={() => setIsSidebarOpen(true)} className="p-2 hover:bg-white/5 rounded-lg transition-colors">
-                <MessageSquare size={20} className="text-emerald-400" />
+                <MessageSquare size={18} className="text-blue-400 sm:size-20" />
               </button>
             )}
-            <h2 className="text-sm font-medium text-zinc-400 uppercase tracking-widest">
+            <h2 className="text-[10px] sm:text-sm font-medium text-zinc-400 uppercase tracking-widest truncate max-w-[120px] sm:max-w-none">
               {activeChat?.title || 'Alpha Intelligence'}
             </h2>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 sm:gap-4">
             <button 
               onClick={() => setIsTaskOpen(true)}
-              className="p-2 hover:bg-white/5 rounded-lg transition-colors group"
+              className="p-1.5 sm:p-2 hover:bg-white/5 rounded-lg transition-colors group"
               title="Task Protocol"
             >
-              <ClipboardList size={20} className="text-zinc-400 group-hover:text-blue-400 transition-colors" />
+              <ClipboardList size={18} className="text-zinc-400 group-hover:text-blue-400 transition-colors sm:size-20" />
             </button>
             <button 
-              onClick={() => setIsMemoryOpen(true)}
-              className="p-2 hover:bg-white/5 rounded-lg transition-colors group"
+              onClick={() => setIsImageGenOpen(true)}
+              className="p-1.5 sm:p-2 hover:bg-white/5 rounded-lg transition-colors group"
+              title="Vision Lab"
+            >
+              <ImageIcon size={18} className="text-zinc-400 group-hover:text-blue-400 transition-colors sm:size-20" />
+            </button>
+            <button 
+              onClick={() => {
+                setMemorySearchTerm('');
+                setIsMemoryOpen(true);
+              }}
+              className="p-1.5 sm:p-2 hover:bg-white/5 rounded-lg transition-colors group"
               title="Memory Bank"
             >
-              <Brain size={20} className="text-zinc-400 group-hover:text-emerald-400 transition-colors" />
+              <Brain size={18} className="text-zinc-400 group-hover:text-blue-400 transition-colors sm:size-20" />
             </button>
             <button 
               onClick={() => setIsSettingsOpen(true)}
-              className="p-2 hover:bg-white/5 rounded-lg transition-colors group"
+              className="p-1.5 sm:p-2 hover:bg-white/5 rounded-lg transition-colors group"
               title="Settings"
             >
-              <Settings size={20} className="text-zinc-400 group-hover:text-emerald-400 transition-colors" />
+              <Settings size={18} className="text-zinc-400 group-hover:text-blue-400 transition-colors sm:size-20" />
             </button>
           </div>
         </header>
@@ -440,7 +466,12 @@ export default function App() {
         {isMemoryOpen && (
           <MemoryBank 
             userId={user.uid} 
-            onClose={() => setIsMemoryOpen(false)} 
+            memories={memories}
+            initialSearchTerm={memorySearchTerm}
+            onClose={() => {
+              setIsMemoryOpen(false);
+              setMemorySearchTerm('');
+            }} 
           />
         )}
       </AnimatePresence>
@@ -453,6 +484,11 @@ export default function App() {
           />
         )}
       </AnimatePresence>
+
+      <ImageGenerator
+        isOpen={isImageGenOpen}
+        onClose={() => setIsImageGenOpen(false)}
+      />
 
       <AnimatePresence>
         {isSettingsOpen && (
@@ -475,7 +511,7 @@ export default function App() {
                 <X size={20} />
               </button>
               <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                <Settings className="text-emerald-400" />
+                <Settings className="text-blue-400" />
                 System Settings
               </h2>
               <div className="space-y-6">
@@ -483,8 +519,8 @@ export default function App() {
                   {userProfile?.photoURL ? (
                     <img src={userProfile.photoURL} className="w-12 h-12 rounded-full" alt="Profile" />
                   ) : (
-                    <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                      <Brain size={24} className="text-emerald-400" />
+                    <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+                      <Brain size={24} className="text-blue-400" />
                     </div>
                   )}
                   <div>
@@ -495,13 +531,13 @@ export default function App() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl">
                     <span className="text-sm">Thinking Mode</span>
-                    <div className="w-10 h-5 bg-emerald-500 rounded-full relative cursor-pointer">
+                    <div className="w-10 h-5 bg-blue-500 rounded-full relative cursor-pointer">
                       <div className="absolute right-1 top-1 w-3 h-3 bg-white rounded-full" />
                     </div>
                   </div>
                   <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl">
                     <span className="text-sm">Search Grounding</span>
-                    <div className="w-10 h-5 bg-emerald-500 rounded-full relative cursor-pointer">
+                    <div className="w-10 h-5 bg-blue-500 rounded-full relative cursor-pointer">
                       <div className="absolute right-1 top-1 w-3 h-3 bg-white rounded-full" />
                     </div>
                   </div>

@@ -71,7 +71,7 @@ export const generateResponse = async (
   }));
 
   const config: any = {
-    systemInstruction: systemInstruction || "You are Alpha, a highly advanced AI assistant. You are a master of code, logic, and creative prompts. When asked for code, provide clean, efficient, and well-documented solutions. When asked for prompts, create detailed and effective instructions. You can manage tasks for the user using the provided tools. If the user asks to create, list, or complete a task, use the appropriate tool.",
+    systemInstruction: systemInstruction || "You are Alpha, a highly advanced AI assistant. You are a master of code, logic, and creative prompts. When asked for code, provide clean, efficient, and well-documented solutions. When asked for prompts, create detailed and effective instructions. You can manage tasks for the user using the provided tools. If the user asks to create, list, or complete a task, use the appropriate tool. IMPORTANT: Always wrap code snippets and terminal commands in markdown code blocks (e.g., ```python or ```bash) so they can be easily copied by the user.",
     tools: [{ functionDeclarations: [createTaskTool, listTasksTool, completeTaskTool] }]
   };
 
@@ -138,15 +138,20 @@ export const extractMemories = async (chatHistory: string) => {
   }
 };
 
-export const generateImage = async (prompt: string, aspectRatio: string) => {
+export const generateImage = async (prompt: string, aspectRatio: string = "1:1", negativePrompt?: string) => {
   const ai = getAI();
+  
+  // Combine prompt with negative prompt if provided
+  const fullPrompt = negativePrompt 
+    ? `${prompt}\n\n[Negative prompt: ${negativePrompt}]`
+    : prompt;
+
   const response = await ai.models.generateContent({
-    model: "gemini-3-pro-image-preview",
-    contents: { parts: [{ text: prompt }] },
+    model: "gemini-2.5-flash-image",
+    contents: { parts: [{ text: fullPrompt }] },
     config: {
       imageConfig: {
         aspectRatio: aspectRatio as any,
-        imageSize: "1K"
       }
     }
   });

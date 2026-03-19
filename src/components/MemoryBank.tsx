@@ -8,12 +8,13 @@ import { cn } from '../lib/utils';
 
 interface MemoryBankProps {
   userId: string;
+  memories: Memory[];
   onClose: () => void;
+  initialSearchTerm?: string;
 }
 
-export default function MemoryBank({ userId, onClose }: MemoryBankProps) {
-  const [memories, setMemories] = useState<Memory[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+export default function MemoryBank({ userId, memories, onClose, initialSearchTerm = '' }: MemoryBankProps) {
+  const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -33,15 +34,6 @@ export default function MemoryBank({ userId, onClose }: MemoryBankProps) {
       setShowSuggestions(false);
     }
   }, [searchTerm, memories]);
-
-  useEffect(() => {
-    const q = query(collection(db, 'memories'), where('userId', '==', userId), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const memoryList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Memory));
-      setMemories(memoryList);
-    }, (error) => handleFirestoreError(error, OperationType.LIST, 'memories'));
-    return () => unsubscribe();
-  }, [userId]);
 
   const deleteMemory = async (id: string) => {
     try {
@@ -74,8 +66,8 @@ export default function MemoryBank({ userId, onClose }: MemoryBankProps) {
       >
         <header className="p-6 sm:p-8 border-b border-white/5 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-500/10 rounded-xl sm:rounded-2xl flex items-center justify-center border border-emerald-500/20">
-              <Brain size={20} className="text-emerald-400 sm:size-24" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/10 rounded-xl sm:rounded-2xl flex items-center justify-center border border-blue-500/20">
+              <Brain size={20} className="text-blue-400 sm:size-24" />
             </div>
             <div>
               <h2 className="text-xl sm:text-2xl font-black tracking-tighter">Memory Bank</h2>
@@ -100,7 +92,7 @@ export default function MemoryBank({ userId, onClose }: MemoryBankProps) {
               onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               placeholder="Search cognitive records..."
-              className="w-full bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl py-3 sm:py-4 pl-10 sm:pl-12 pr-4 text-sm outline-none focus:border-emerald-500/50 transition-colors"
+              className="w-full bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl py-3 sm:py-4 pl-10 sm:pl-12 pr-4 text-sm outline-none focus:border-blue-500/50 transition-colors"
             />
             <AnimatePresence>
               {showSuggestions && (
@@ -117,9 +109,9 @@ export default function MemoryBank({ userId, onClose }: MemoryBankProps) {
                         setSearchTerm(s);
                         setShowSuggestions(false);
                       }}
-                      className="w-full text-left px-6 py-3 text-sm text-zinc-400 hover:bg-white/5 hover:text-emerald-400 transition-colors flex items-center gap-3"
+                      className="w-full text-left px-6 py-3 text-sm text-zinc-400 hover:bg-white/5 hover:text-blue-400 transition-colors flex items-center gap-3"
                     >
-                      <Sparkles size={14} className="text-emerald-500/50" />
+                      <Sparkles size={14} className="text-blue-500/50" />
                       {s}
                     </button>
                   ))}
@@ -133,7 +125,7 @@ export default function MemoryBank({ userId, onClose }: MemoryBankProps) {
               onClick={() => setActiveCategory(null)}
               className={cn(
                 "px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap",
-                !activeCategory ? "bg-emerald-500 text-black" : "bg-white/5 text-zinc-500 hover:bg-white/10"
+                !activeCategory ? "bg-blue-500 text-black" : "bg-white/5 text-zinc-500 hover:bg-white/10"
               )}
             >
               All Records
@@ -144,7 +136,7 @@ export default function MemoryBank({ userId, onClose }: MemoryBankProps) {
                 onClick={() => setActiveCategory(cat as string)}
                 className={cn(
                   "px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap",
-                  activeCategory === cat ? "bg-emerald-500 text-black" : "bg-white/5 text-zinc-500 hover:bg-white/10"
+                  activeCategory === cat ? "bg-blue-500 text-black" : "bg-white/5 text-zinc-500 hover:bg-white/10"
                 )}
               >
                 {cat}
@@ -163,12 +155,12 @@ export default function MemoryBank({ userId, onClose }: MemoryBankProps) {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="group p-6 bg-white/5 border border-white/10 rounded-3xl hover:border-emerald-500/30 transition-all relative"
+                  className="group p-6 bg-white/5 border border-white/10 rounded-3xl hover:border-blue-500/30 transition-all relative"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-3 flex-1">
                       <div className="flex items-center gap-3">
-                        <div className="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded-md text-[10px] font-black uppercase tracking-widest">
+                        <div className="px-2 py-1 bg-blue-500/10 text-blue-400 rounded-md text-[10px] font-black uppercase tracking-widest">
                           {memory.category || 'General'}
                         </div>
                         <div className="flex items-center gap-1 text-[10px] text-zinc-600 font-bold uppercase tracking-widest">
@@ -186,7 +178,7 @@ export default function MemoryBank({ userId, onClose }: MemoryBankProps) {
                     </button>
                   </div>
                   <motion.div
-                    className="absolute inset-0 rounded-3xl bg-emerald-500/5 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity"
+                    className="absolute inset-0 rounded-3xl bg-blue-500/5 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity"
                   />
                 </motion.div>
               ))
@@ -209,7 +201,7 @@ export default function MemoryBank({ userId, onClose }: MemoryBankProps) {
         <footer className="p-6 border-t border-white/5 bg-black/40 backdrop-blur-md shrink-0">
           <div className="flex items-center justify-between text-[10px] font-black text-zinc-600 uppercase tracking-widest">
             <div className="flex items-center gap-2">
-              <Sparkles size={12} className="text-emerald-500" />
+              <Sparkles size={12} className="text-blue-500" />
               AI-Powered Extraction Active
             </div>
             <div>

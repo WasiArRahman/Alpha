@@ -78,7 +78,7 @@ export default function InputHub({ onSendMessage, isLoading }: InputHubProps) {
   }, [content]);
 
   return (
-    <div className="p-4 sm:p-6 bg-gradient-to-t from-black via-black/80 to-transparent relative z-10">
+    <div className="p-3 sm:p-6 bg-gradient-to-t from-black via-black/80 to-transparent relative z-10">
       <div className="max-w-4xl mx-auto relative">
         <AnimatePresence>
           {attachments.length > 0 && (
@@ -86,30 +86,30 @@ export default function InputHub({ onSendMessage, isLoading }: InputHubProps) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="flex flex-wrap gap-2 sm:gap-3 mb-4 p-3 sm:p-4 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-xl"
+              className="flex flex-wrap gap-2 sm:gap-3 mb-3 sm:mb-4 p-2 sm:p-4 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl backdrop-blur-xl"
             >
               {attachments.map((att, i) => (
-                <div key={i} className="group relative p-2 bg-black/40 rounded-xl border border-white/10 flex items-center gap-3">
+                <div key={i} className="group relative p-1.5 sm:p-2 bg-black/40 rounded-lg sm:rounded-xl border border-white/10 flex items-center gap-2 sm:gap-3">
                   {att.type.startsWith('image/') ? (
-                    <img src={att.base64} className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg object-cover" alt="Preview" />
+                    <img src={att.base64} className="w-8 h-8 sm:w-10 sm:h-10 rounded-md sm:rounded-lg object-cover" alt="Preview" />
                   ) : att.type.startsWith('video/') ? (
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500/10 rounded-lg flex items-center justify-center border border-blue-500/20">
-                      <Video size={14} className="text-blue-400 sm:size-16" />
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500/10 rounded-md sm:rounded-lg flex items-center justify-center border border-blue-500/20">
+                      <Video size={14} className="text-blue-400 sm:w-4 sm:h-4" />
                     </div>
                   ) : (
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/5 rounded-lg flex items-center justify-center">
-                      <FileText size={14} className="text-emerald-400 sm:size-16" />
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/5 rounded-md sm:rounded-lg flex items-center justify-center">
+                      <FileText size={14} className="text-blue-400 sm:w-4 sm:h-4" />
                     </div>
                   )}
-                  <div className="text-[10px] pr-8">
-                    <p className="font-bold truncate max-w-[80px] sm:max-w-[100px]">{att.name}</p>
+                  <div className="text-[9px] sm:text-[10px] pr-6 sm:pr-8">
+                    <p className="font-bold truncate max-w-[60px] sm:max-w-[100px]">{att.name}</p>
                     <p className="text-zinc-500">{(att.size / 1024).toFixed(1)} KB</p>
                   </div>
                   <button
                     onClick={() => setAttachments(prev => prev.filter((_, idx) => idx !== i))}
-                    className="absolute top-1 right-1 p-1 hover:bg-red-500/20 text-red-500 rounded-full transition-colors"
+                    className="absolute top-0.5 right-0.5 p-1 hover:bg-red-500/20 text-red-500 rounded-full transition-colors"
                   >
-                    <X size={10} className="sm:size-12" />
+                    <X size={10} className="sm:w-3 sm:h-3" />
                   </button>
                 </div>
               ))}
@@ -117,16 +117,16 @@ export default function InputHub({ onSendMessage, isLoading }: InputHubProps) {
           )}
         </AnimatePresence>
 
-        <div className="relative flex items-end gap-2 sm:gap-4 bg-white/5 border border-white/10 rounded-2xl sm:rounded-3xl p-2 sm:p-3 backdrop-blur-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+        <div className="relative flex items-end gap-1.5 sm:gap-4 bg-white/5 border border-white/10 rounded-xl sm:rounded-3xl p-1.5 sm:p-3 backdrop-blur-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)]">
           <div className="relative">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className={cn(
-                "p-2 sm:p-3 rounded-xl sm:rounded-2xl transition-all group",
-                isMenuOpen ? "bg-emerald-500 text-black" : "hover:bg-white/5 text-zinc-400"
+                "p-2 sm:p-3 rounded-lg sm:rounded-2xl transition-all group",
+                isMenuOpen ? "bg-blue-500 text-black" : "hover:bg-white/5 text-zinc-400"
               )}
             >
-              <Paperclip size={18} className={cn("sm:size-20", isMenuOpen ? "rotate-45" : "group-hover:rotate-12")} />
+              <Paperclip size={18} className={cn("sm:w-5 sm:h-5", isMenuOpen ? "rotate-45" : "group-hover:rotate-12")} />
             </button>
             <AnimatePresence>
               {isMenuOpen && (
@@ -134,21 +134,21 @@ export default function InputHub({ onSendMessage, isLoading }: InputHubProps) {
                   initial={{ opacity: 0, scale: 0.9, y: -20 }}
                   animate={{ opacity: 1, scale: 1, y: -10 }}
                   exit={{ opacity: 0, scale: 0.9, y: -20 }}
-                  className="absolute bottom-full left-0 mb-4 bg-[#0a0a0a] border border-white/10 rounded-2xl p-2 min-w-[180px] shadow-2xl z-50"
+                  className="absolute bottom-full left-0 mb-4 bg-[#0a0a0a] border border-white/10 rounded-2xl p-2 min-w-[160px] sm:min-w-[180px] shadow-2xl z-50"
                 >
-                  <button onClick={() => fileInputRef.current?.click()} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl text-sm text-zinc-400 hover:text-white transition-colors">
-                    <ImageIcon size={16} className="text-emerald-400" />
+                  <button onClick={() => fileInputRef.current?.click()} className="w-full flex items-center gap-3 px-3 sm:px-4 py-2 sm:py-3 hover:bg-white/5 rounded-xl text-xs sm:text-sm text-zinc-400 hover:text-white transition-colors">
+                    <ImageIcon size={16} className="text-blue-400" />
                     Images
                   </button>
-                  <button onClick={() => fileInputRef.current?.click()} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl text-sm text-zinc-400 hover:text-white transition-colors">
+                  <button onClick={() => fileInputRef.current?.click()} className="w-full flex items-center gap-3 px-3 sm:px-4 py-2 sm:py-3 hover:bg-white/5 rounded-xl text-xs sm:text-sm text-zinc-400 hover:text-white transition-colors">
                     <Video size={16} className="text-blue-400" />
                     Videos
                   </button>
-                  <button onClick={() => fileInputRef.current?.click()} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl text-sm text-zinc-400 hover:text-white transition-colors">
+                  <button onClick={() => fileInputRef.current?.click()} className="w-full flex items-center gap-3 px-3 sm:px-4 py-2 sm:py-3 hover:bg-white/5 rounded-xl text-xs sm:text-sm text-zinc-400 hover:text-white transition-colors">
                     <FileText size={16} className="text-orange-400" />
                     Documents
                   </button>
-                  <button onClick={() => fileInputRef.current?.click()} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl text-sm text-zinc-400 hover:text-white transition-colors">
+                  <button onClick={() => fileInputRef.current?.click()} className="w-full flex items-center gap-3 px-3 sm:px-4 py-2 sm:py-3 hover:bg-white/5 rounded-xl text-xs sm:text-sm text-zinc-400 hover:text-white transition-colors">
                     <Folder size={16} className="text-yellow-400" />
                     Folders
                   </button>
@@ -169,18 +169,18 @@ export default function InputHub({ onSendMessage, isLoading }: InputHubProps) {
               }
             }}
             placeholder="Initialize command sequence..."
-            className="flex-1 bg-transparent border-none outline-none py-2 sm:py-3 text-sm text-zinc-200 placeholder:text-zinc-600 resize-none custom-scrollbar"
+            className="flex-1 bg-transparent border-none outline-none py-2 sm:py-3 text-xs sm:text-sm text-zinc-200 placeholder:text-zinc-600 resize-none custom-scrollbar"
           />
 
           <div className="flex items-center gap-1 sm:gap-2">
             <button
               onClick={startRecording}
               className={cn(
-                "p-2 sm:p-3 rounded-xl sm:rounded-2xl transition-all relative overflow-hidden group",
+                "p-2 sm:p-3 rounded-lg sm:rounded-2xl transition-all relative overflow-hidden group",
                 isRecording ? "bg-red-500/20 text-red-500" : "hover:bg-white/5 text-zinc-400"
               )}
             >
-              <Mic size={18} className={cn("sm:size-20", isRecording && "animate-pulse")} />
+              <Mic size={18} className={cn("sm:w-5 sm:h-5", isRecording && "animate-pulse")} />
               {isRecording && (
                 <motion.div
                   layoutId="waveform"
@@ -195,13 +195,13 @@ export default function InputHub({ onSendMessage, isLoading }: InputHubProps) {
               onClick={handleSend}
               disabled={isLoading || (!content.trim() && attachments.length === 0)}
               className={cn(
-                "p-2 sm:p-3 rounded-xl sm:rounded-2xl transition-all shadow-lg",
+                "p-2 sm:p-3 rounded-lg sm:rounded-2xl transition-all shadow-lg",
                 isLoading || (!content.trim() && attachments.length === 0)
                   ? "bg-white/5 text-zinc-600 cursor-not-allowed"
-                  : "bg-emerald-500 text-black hover:bg-emerald-400 hover:scale-105 active:scale-95 shadow-emerald-500/20"
+                  : "bg-blue-500 text-black hover:bg-blue-400 hover:scale-105 active:scale-95 shadow-blue-500/20"
               )}
             >
-              <Send size={18} className="sm:size-20" />
+              <Send size={18} className="sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>
@@ -215,17 +215,17 @@ export default function InputHub({ onSendMessage, isLoading }: InputHubProps) {
           className="hidden"
         />
 
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-[8px] sm:text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
+        <div className="mt-3 sm:mt-4 flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-[7px] sm:text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
           <div className="flex items-center gap-1 sm:gap-2">
-            <Globe size={10} className="text-blue-500 sm:size-12" />
+            <Globe size={10} className="text-blue-500 sm:w-3 sm:h-3" />
             Search Grounding
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
-            <Brain size={10} className="text-emerald-500 sm:size-12" />
+            <Brain size={10} className="text-blue-500 sm:w-3 sm:h-3" />
             Thinking Mode
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
-            <Sparkles size={10} className="text-yellow-500 sm:size-12" />
+            <Sparkles size={10} className="text-yellow-500 sm:w-3 sm:h-3" />
             Multimodal Core
           </div>
         </div>

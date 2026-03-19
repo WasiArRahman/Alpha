@@ -36,7 +36,7 @@
   }
 
   .markdown-body code {
-    @apply bg-white/10 px-1.5 py-0.5 rounded text-emerald-400 font-mono text-xs;
+    @apply bg-white/10 px-1.5 py-0.5 rounded text-blue-400 font-mono text-xs;
   }
 
   .markdown-body pre {
@@ -56,20 +56,20 @@
   }
 
   .markdown-body blockquote {
-    @apply border-l-4 border-emerald-500/50 pl-4 italic text-zinc-400 my-4;
+    @apply border-l-4 border-blue-500/50 pl-4 italic text-zinc-400 my-4;
   }
 
   .markdown-body a {
-    @apply text-emerald-400 hover:underline;
+    @apply text-blue-400 hover:underline;
   }
 }
 
 @keyframes pulse-neon {
   0%, 100% {
-    text-shadow: 0 0 20px rgba(16, 185, 129, 0.5), 0 0 40px rgba(16, 185, 129, 0.2);
+    text-shadow: 0 0 20px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.2);
   }
   50% {
-    text-shadow: 0 0 40px rgba(16, 185, 129, 0.8), 0 0 80px rgba(16, 185, 129, 0.4);
+    text-shadow: 0 0 40px rgba(59, 130, 246, 0.8), 0 0 80px rgba(59, 130, 246, 0.4);
   }
 }
 

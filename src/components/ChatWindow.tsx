@@ -21,32 +21,68 @@ const CodeBlock = ({ language, value }: CodeBlockProps) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const isTerminal = ['bash', 'sh', 'shell', 'zsh', 'cmd', 'powershell', 'terminal'].includes(language.toLowerCase());
+
   return (
-    <div className="relative group/code my-4 rounded-xl overflow-hidden border border-white/10">
-      <div className="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-white/10">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-          {language || 'code'}
-        </span>
+    <div className={cn(
+      "relative group/code my-4 sm:my-6 rounded-lg sm:rounded-xl overflow-hidden border",
+      isTerminal ? "border-blue-500/30 bg-black/60" : "border-white/10 bg-white/5"
+    )}>
+      <div className={cn(
+        "flex items-center justify-between px-3 sm:px-4 py-1.5 sm:py-2 border-b",
+        isTerminal ? "bg-blue-500/10 border-blue-500/20" : "bg-white/5 border-white/10"
+      )}>
+        <div className="flex items-center gap-2">
+          {isTerminal && <div className="flex gap-1 mr-1.5">
+            <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-red-500/50" />
+            <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-yellow-500/50" />
+            <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-green-500/50" />
+          </div>}
+          <span className={cn(
+            "text-[8px] sm:text-[10px] font-black uppercase tracking-widest",
+            isTerminal ? "text-blue-400" : "text-zinc-500"
+          )}>
+            {language || (isTerminal ? 'terminal' : 'code')}
+          </span>
+        </div>
         <button
           onClick={handleCopy}
-          className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-zinc-400 hover:text-white"
-          title="Copy code"
+          className={cn(
+            "flex items-center gap-1.5 sm:gap-2 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md sm:rounded-lg transition-all text-[8px] sm:text-[10px] font-bold uppercase tracking-wider",
+            copied 
+              ? "bg-blue-500 text-black" 
+              : "hover:bg-white/10 text-zinc-400 hover:text-white"
+          )}
+          title="Copy to clipboard"
         >
-          {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+          {copied ? (
+            <>
+              <Check size={10} className="sm:w-3 sm:h-3" />
+              Copied
+            </>
+          ) : (
+            <>
+              <Copy size={10} className="sm:w-3 sm:h-3" />
+              Copy
+            </>
+          )}
         </button>
       </div>
-      <SyntaxHighlighter
-        language={language}
-        style={atomDark}
-        customStyle={{
-          margin: 0,
-          padding: '1rem',
-          fontSize: '0.875rem',
-          background: 'transparent',
-        }}
-      >
-        {value}
-      </SyntaxHighlighter>
+      <div className="relative overflow-x-auto">
+        <SyntaxHighlighter
+          language={language || 'text'}
+          style={atomDark}
+          customStyle={{
+            margin: 0,
+            padding: '1rem sm:1.25rem',
+            fontSize: '0.75rem sm:0.85rem',
+            background: 'transparent',
+            fontFamily: 'var(--font-mono)',
+          }}
+        >
+          {value}
+        </SyntaxHighlighter>
+      </div>
     </div>
   );
 };
@@ -73,13 +109,13 @@ export default function ChatWindow({ messages, isLoading, activeChat, createNewC
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="w-24 h-24 bg-emerald-500/10 rounded-full flex items-center justify-center relative"
+          className="w-24 h-24 bg-blue-500/10 rounded-full flex items-center justify-center relative"
         >
-          <Sparkles size={48} className="text-emerald-400" />
+          <Sparkles size={48} className="text-blue-400" />
           <motion.div
             animate={{ scale: [1, 1.2, 1] }}
             transition={{ duration: 3, repeat: Infinity }}
-            className="absolute inset-0 rounded-full bg-emerald-500/20 blur-xl"
+            className="absolute inset-0 rounded-full bg-blue-500/20 blur-xl"
           />
         </motion.div>
         <div className="space-y-4">
@@ -90,7 +126,7 @@ export default function ChatWindow({ messages, isLoading, activeChat, createNewC
         </div>
         <button
           onClick={createNewChat}
-          className="flex items-center gap-3 px-8 py-4 bg-white text-black rounded-full font-bold hover:bg-emerald-400 transition-all transform hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(16,185,129,0.3)]"
+          className="flex items-center gap-3 px-8 py-4 bg-white text-black rounded-full font-bold hover:bg-blue-400 transition-all transform hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(59,130,246,0.3)]"
         >
           <Plus size={20} />
           New Session
@@ -119,10 +155,10 @@ export default function ChatWindow({ messages, isLoading, activeChat, createNewC
               <div className={cn(
                 "w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0 border transition-all",
                 msg.role === 'user' 
-                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
+                  ? "bg-blue-500/10 border-blue-500/20 text-blue-400" 
                   : "bg-white/5 border-white/10 text-zinc-400"
               )}>
-                {msg.role === 'user' ? <User size={16} className="sm:size-20" /> : <Bot size={16} className="sm:size-20" />}
+                {msg.role === 'user' ? <User size={16} className="sm:w-5 sm:h-5" /> : <Bot size={16} className="sm:w-5 sm:h-5" />}
               </div>
               
               <div className={cn(
@@ -130,23 +166,29 @@ export default function ChatWindow({ messages, isLoading, activeChat, createNewC
                 msg.role === 'user' ? "items-end" : "items-start"
               )}>
                 <div className={cn(
-                  "px-4 sm:px-6 py-3 sm:py-4 rounded-2xl sm:rounded-3xl text-sm leading-relaxed transition-all",
+                  "px-4 sm:px-6 py-3 sm:py-4 rounded-2xl sm:rounded-3xl text-xs sm:text-sm leading-relaxed transition-all",
                   msg.role === 'user' 
-                    ? "bg-emerald-500/10 text-emerald-50 border border-emerald-500/20 rounded-tr-none" 
+                    ? "bg-blue-500/10 text-blue-50 border border-blue-500/20 rounded-tr-none" 
                     : "bg-white/5 text-zinc-200 border border-white/10 rounded-tl-none"
                 )}>
-                  <div className="markdown-body prose prose-invert max-w-none prose-sm sm:prose-base">
+                  <div className="markdown-body prose prose-invert max-w-none prose-xs sm:prose-sm">
                     <Markdown
                       components={{
                         code({ node, inline, className, children, ...props }: any) {
                           const match = /language-(\w+)/.exec(className || '');
-                          return !inline && match ? (
-                            <CodeBlock
-                              language={match[1]}
-                              value={String(children).replace(/\n$/, '')}
-                            />
-                          ) : (
-                            <code className={cn("bg-white/10 px-1.5 py-0.5 rounded text-emerald-400", className)} {...props}>
+                          const language = match ? match[1] : '';
+                          
+                          if (!inline) {
+                            return (
+                              <CodeBlock
+                                language={language}
+                                value={String(children).replace(/\n$/, '')}
+                              />
+                            );
+                          }
+                          
+                          return (
+                            <code className={cn("bg-white/10 px-1.5 py-0.5 rounded text-blue-400 font-mono text-[10px] sm:text-xs", className)} {...props}>
                               {children}
                             </code>
                           );
@@ -171,7 +213,7 @@ export default function ChatWindow({ messages, isLoading, activeChat, createNewC
                             />
                           ) : (
                             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/5 rounded-lg flex items-center justify-center">
-                              <FileIcon size={14} className="sm:size-16" />
+                              <FileIcon size={14} className="sm:w-4 sm:h-4" />
                             </div>
                           )}
                           <div className="flex items-center gap-2 px-1">
@@ -205,14 +247,14 @@ export default function ChatWindow({ messages, isLoading, activeChat, createNewC
             className="flex gap-3 sm:gap-6"
           >
             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-              <Bot size={16} className="text-emerald-400 animate-pulse sm:size-20" />
+              <Bot size={16} className="text-blue-400 animate-pulse sm:w-5 sm:h-5" />
             </div>
             <div className="flex flex-col space-y-2">
               <div className="px-4 sm:px-6 py-3 sm:py-4 bg-white/5 border border-white/10 rounded-2xl sm:rounded-3xl rounded-tl-none">
                 <div className="flex gap-1">
-                  <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0 }} className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-emerald-500 rounded-full" />
-                  <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.2 }} className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-emerald-500 rounded-full" />
-                  <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.4 }} className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-emerald-500 rounded-full" />
+                  <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0 }} className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full" />
+                  <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.2 }} className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full" />
+                  <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.4 }} className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full" />
                 </div>
               </div>
             </div>
